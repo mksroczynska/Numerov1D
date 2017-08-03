@@ -21,7 +21,7 @@ int main() {
     #pragma omp parallel for
     for (i = 0; i < params.n_d(); i++) {
         double d = params.getD_min() + i * params.getDelta_d();
-        calculate(d, 3, params);
+        calculate(d, params);
     }
 }
 

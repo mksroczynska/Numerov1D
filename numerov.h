@@ -13,13 +13,34 @@
 #include <cstring>
 #include <sstream>
 #include"Parameters.h"
+
 using namespace std;
+
+double v(double *z, int i, double d, const Parameters &params);
+
+double r_max(double E, const Parameters &params, double d);
+
+int n(double E, const Parameters &params, double d);
+
+void num_left(double E, int N, double *z, double *fl, double d, const Parameters &params);
+
+void num_right(double E, double *z, double *fr, int *wskN, double d, const Parameters &params);
+
+double help_function(double f_right_r, double f_right_dr, double f_left_r, double f_left_dr);
+
+double HF(double E, double d, const Parameters &params);
+
+double bisection(double E_1, double E_2, double d, const Parameters &params);
+
+void calculate(double d, const Parameters &params);
 
 double v(double *z, int i, double d, const Parameters &params) {
     double trap = params.getAlpha() * z[i] * z[i];
     double interaction =
-            -1.0 / (((z[i] + d) * (z[i] + d) + params.getB() * params.getB()) * ((z[i] + d) * (z[i] + d) + params.getB() * params.getB()))
-            - 1.0 / (((z[i] - d) * (z[i] - d) + params.getB() * params.getB()) * ((z[i] - d) * (z[i] - d) + params.getB() * params.getB()));
+            -1.0 / (((z[i] + d) * (z[i] + d) + params.getB() * params.getB()) *
+                    ((z[i] + d) * (z[i] + d) + params.getB() * params.getB()))
+            - 1.0 / (((z[i] - d) * (z[i] - d) + params.getB() * params.getB()) *
+                     ((z[i] - d) * (z[i] - d) + params.getB() * params.getB()));
     return trap + interaction;
 }
 
@@ -31,16 +52,6 @@ double r_max(double E, const Parameters &params, double d) {
     else if (E >= 0.5 && E < 4) return (2 - 0.1 * E) * sqrt(E / params.getAlpha()) + d;
     else if (E >= 4 && E < 10) return (2 - 0.05 * E) * sqrt(E / params.getAlpha()) + d;
     else if (E >= 10) return (2 - 0.01 * E) * sqrt(E / params.getAlpha()) - 40 + d;
-//	else if (E>=0) return
-    //  else if (E >= 0.2 && E < 0.7) return 50;
-//	else if (E>= 0.7 && E < 2) return 70;
-//	else if (E >= 2 && E < 5) return 100;
-//else return 50;
-    //return 10;
-//    if(E > 0)
-//        return max(2*sqrt(E)/params.getAlpha(), 2*d);
-//    else
-//        return d + 2;
 
 
 }
@@ -80,7 +91,6 @@ void num_right(double E, double *z, double *fr, int *wskN, double d, const Param
 
     z[nn - 2] = r_max(E, params, d) - params.dx(E);
 
-    //double k = sqrt( 1.22*abs(E - v(z, n-1, l, params))); //	double k=sqrt(2*miu*abs((E-v1_dz)/(h*h)));
 
     fr[nn - 2] = 0.00001;//0.5*pow(k, -0.5)*exp(-abs(k)*(z[n-2]));
 
@@ -97,7 +107,6 @@ void num_right(double E, double *z, double *fr, int *wskN, double d, const Param
 
         if (fr[i] < fr[i + 1]) {
             *wskN = i + 1;
-            //cout<<"wskN = "<<*wskN<<endl;
             break;
         }
     }
@@ -106,8 +115,6 @@ void num_right(double E, double *z, double *fr, int *wskN, double d, const Param
 
 double help_function(double f_right_r, double f_right_dr, double f_left_r, double f_left_dr) {
     double help;
-    //if (f_right_dr==0 || f_left_dr == 0) cout<<"Zero w mianowniku"<<endl;
-    //if (f_right_r == 0 || f_left_r == 0) cout<<"zero"<<endl;
     help = f_right_r / f_right_dr - f_left_r / f_left_dr;
     return help;
 }
@@ -125,10 +132,8 @@ double HF(double E, double d, const Parameters &params) {
     psi_right = new double[n(E, params, d)];
 
     num_right(E, r, psi_right, &N, d, params);
-    // cout << "N = "<<N<<endl;
-    if (N == 0) N = 1;
-    //cout <<"N ="<< N<<endl;
 
+    if (N == 0) N = 1;
 
 
     psi_right_r = psi_right[N - 1];
@@ -155,7 +160,7 @@ double HF(double E, double d, const Parameters &params) {
 
 }
 
-double bisekcja(double E_1, double E_2, double d, const Parameters &params) {
+double bisection(double E_1, double E_2, double d, const Parameters &params) {
     double s;
     if (HF(E_1, d, params) * HF(E_2, d, params) < 0) {
         s = E_1;
@@ -163,21 +168,17 @@ double bisekcja(double E_1, double E_2, double d, const Parameters &params) {
             s = (E_1 + E_2) / 2;
             if (HF(E_1, d, params) * HF(s, d, params) < 0) {
                 E_2 = s;
-            }
-            else if (HF(E_2, d, params) * HF(s, d, params) < 0) {
+            } else if (HF(E_2, d, params) * HF(s, d, params) < 0) {
                 E_1 = s;
-            }
-            else break;
+            } else break;
         }
-    }
-    else {
+    } else {
         s = 0;;
     }
     return s;
 }
 
-
-void calculate(double d, int part, const Parameters &params) {
+void calculate(double d, const Parameters &params) {
 
 
     int N = 0;
@@ -185,11 +186,13 @@ void calculate(double d, int part, const Parameters &params) {
 
 
     ostringstream energy_levels;
-    energy_levels << "//home//martas//Dropbox//PracaMagisterska//Numerov1D//Wyniki//Ed=" << d << "b=" << params.getB() << "alpha=" << params.getAlpha() << ".dat";
+    energy_levels << "//home//martas//Dropbox//PracaMagisterska//Numerov1D//Wyniki//Ed=" << d << "b=" << params.getB()
+                  << "alpha=" << params.getAlpha() << ".dat";
     ofstream f2(energy_levels.str().c_str());
 
     ostringstream plot_eigenfunctions;
-    plot_eigenfunctions << "//home//martas//Dropbox//PracaMagisterska//Numerov1D//Wyniki//plotEigenfd=" << d << "alpha=" << params.getAlpha()<< ".txt";
+    plot_eigenfunctions << "//home//martas//Dropbox//PracaMagisterska//Numerov1D//Wyniki//plotEigenfd=" << d << "alpha="
+                        << params.getAlpha() << ".txt";
     ofstream f3(plot_eigenfunctions.str().c_str());
 
 
@@ -210,12 +213,12 @@ void calculate(double d, int part, const Parameters &params) {
                 double E_1 = E;
                 double E_2 = E + params.deltaE(E);
 
-                double eig = bisekcja(E_1, E_2, d, params);
+                double eig = bisection(E_1, E_2, d, params);
                 double *r = NULL;
                 r = new double[n(eig, params, d)];
 
                 std::cout << "Eig(d = " << d << "): " << setprecision(8) << eig << ", r_max: " << r_max(E, params, d) <<
-                endl;
+                          endl;
 
 
                 f2 << eig;
@@ -235,9 +238,10 @@ void calculate(double d, int part, const Parameters &params) {
                 psi_left_r = psi_left[N - 1];
                 psi_left_dr = psi_left[N];
 
-                if (d == 1 || d==5 || d==10|| d==20||d==25|| d==15) {
+                if (d == 1 || d == 5 || d == 10 || d == 20 || d == 25 || d == 15) {
                     ostringstream function_values;
-                    function_values << "//home//martas//Dropbox//PracaMagisterska//Numerov1D//Wyniki//psid=" << d << "E" << eig << ".dat";
+                    function_values << "//home//martas//Dropbox//PracaMagisterska//Numerov1D//Wyniki//psid=" << d << "E"
+                                    << eig << ".dat";
                     ofstream f4(function_values.str().c_str());
 
 
@@ -299,4 +303,6 @@ void calculate(double d, int part, const Parameters &params) {
 
 
 }
+
+
 #endif //NUMEROV1D_NUMEROV_H
